@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 class Models:
-    def __init__(self, seq_length, train_ds, valid_ds, test_ds):
+    def __init__(self, seq_length, train_ds, valid_ds, test_ds, epochs):
         self.multi_val_performance = {}
         self.multi_performance = {}
         self.seq_length = seq_length
@@ -15,6 +15,7 @@ class Models:
         self.test_ds = test_ds
 
         self.prediction_timestep = 6
+        self.epochs = epochs
 
     def lstm(self, lstm_units, rnn_units):
         multi_lstm_model = tf.keras.Sequential([
@@ -47,9 +48,9 @@ class Models:
         rnn_model = self.RNN(rnn_units=32)
         GRU_model = self.GRU(GRU_units=32,rnn_units=32)
 
-        compile_and_fit(lstm_model, train_ds=self.train_ds, valid_ds=self.valid_ds, patience=200)
-        compile_and_fit(rnn_model, train_ds=self.train_ds, valid_ds=self.valid_ds, patience=200)
-        compile_and_fit(GRU_model, train_ds=self.train_ds, valid_ds=self.valid_ds, patience=200)
+        compile_and_fit(lstm_model, self.epochs, train_ds=self.train_ds, valid_ds=self.valid_ds, patience=200, )
+        compile_and_fit(rnn_model,self.epochs, train_ds=self.train_ds, valid_ds=self.valid_ds, patience=200)
+        compile_and_fit(GRU_model, self.epochs,train_ds=self.train_ds, valid_ds=self.valid_ds, patience=200)
 
         self.multi_val_performance['LSTM'] = lstm_model.evaluate(self.valid_ds)
         self.multi_performance['LSTM'] = lstm_model.evaluate(self.test_ds, verbose=0)
@@ -63,7 +64,8 @@ class Models:
         return self.multi_val_performance, self.multi_performance
 
     def compile_and_fit_model(self, model, patience=200):
-        history = compile_and_fit(model, self.train_ds, self.valid_ds, patience=patience)
+        history = compile_and_fit(model,self.epochs, self.train_ds, self.valid_ds, patience=patience)
+
         return history
 
     def plot_thirty_min_predictions(self, model, test_df, train_std, train_mean):
