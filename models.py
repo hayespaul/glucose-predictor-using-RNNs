@@ -38,26 +38,25 @@ class Models:
     def RNN(self, rnn_units):
         RNN_model = tf.keras.Sequential([
             tf.keras.layers.SimpleRNN(rnn_units, return_sequences=True, input_shape=[None, 1]),
+            tf.keras.layers.SimpleRNN(rnn_units, return_sequences=True, input_shape=[None, 1]),
             tf.keras.layers.SimpleRNN(rnn_units),
             tf.keras.layers.Dense(1)
         ])
         return RNN_model
 
     def compile_and_fit_all_models(self):
-        lstm_model = self.lstm(lstm_units=32,rnn_units=32)
-        rnn_model = self.RNN(rnn_units=32)
-        GRU_model = self.GRU(GRU_units=32,rnn_units=32)
-
-        compile_and_fit(lstm_model, self.epochs, train_ds=self.train_ds, valid_ds=self.valid_ds, patience=200, )
-        compile_and_fit(rnn_model,self.epochs, train_ds=self.train_ds, valid_ds=self.valid_ds, patience=200)
-        compile_and_fit(GRU_model, self.epochs,train_ds=self.train_ds, valid_ds=self.valid_ds, patience=200)
-
+        lstm_model = self.lstm(lstm_units=16, rnn_units=16)
+        compile_and_fit(lstm_model,self.epochs,learning_rate=0.001,  train_ds=self.train_ds, valid_ds=self.valid_ds, patience=200, )
         self.multi_val_performance['LSTM'] = lstm_model.evaluate(self.valid_ds)
         self.multi_performance['LSTM'] = lstm_model.evaluate(self.test_ds, verbose=0)
 
+        rnn_model = self.RNN(rnn_units=16)
+        compile_and_fit(rnn_model,self.epochs,learning_rate=0.001, train_ds=self.train_ds, valid_ds=self.valid_ds, patience=200)
         self.multi_val_performance['RNN'] = rnn_model.evaluate(self.valid_ds)
         self.multi_performance['RNN'] = rnn_model.evaluate(self.test_ds, verbose=0)
 
+        GRU_model = self.GRU(GRU_units=16,rnn_units=16)
+        compile_and_fit(GRU_model,self.epochs,learning_rate=0.001,train_ds=self.train_ds, valid_ds=self.valid_ds, patience=200)
         self.multi_val_performance['GRU'] = GRU_model.evaluate(self.valid_ds)
         self.multi_performance['GRU'] = GRU_model.evaluate(self.test_ds, verbose=0)
 
