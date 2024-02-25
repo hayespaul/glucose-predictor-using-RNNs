@@ -46,7 +46,7 @@ class Models:
 
     def compile_and_fit_all_models(self):
         lstm_model = self.lstm(lstm_units=16, rnn_units=16)
-        compile_and_fit(lstm_model,self.epochs,learning_rate=0.001,  train_ds=self.train_ds, valid_ds=self.valid_ds, patience=200, )
+        compile_and_fit(lstm_model,self.epochs,learning_rate=0.001,  train_ds=self.train_ds, valid_ds=self.valid_ds, patience=200 )
         self.multi_val_performance['LSTM'] = lstm_model.evaluate(self.valid_ds)
         self.multi_performance['LSTM'] = lstm_model.evaluate(self.test_ds, verbose=0)
 
@@ -63,17 +63,20 @@ class Models:
         return self.multi_val_performance, self.multi_performance
 
     def compile_and_fit_model(self, model, patience=200):
-        history = compile_and_fit(model,self.epochs, self.train_ds, self.valid_ds, patience=patience)
+        history = compile_and_fit(model,self.epochs, 0.001,self.train_ds, self.valid_ds, patience=patience)
 
         return history
 
     def plot_thirty_min_predictions(self, model, test_df, train_std, train_mean):
         y_pred_30 = np.zeros(len(test_df.to_numpy()) - self.seq_length)
-
+        compile_and_fit(model,self.epochs, 0.001,self.train_ds, self.valid_ds, patience=200)
         for five_min_intervals in range(len(y_pred_30)):
             X = test_df.to_numpy()[np.newaxis, five_min_intervals:self.seq_length - 1 + five_min_intervals]
             all_y_preds = model.predict(X)
             y_pred_30[five_min_intervals] = all_y_preds[0]
+
+        def root_mean_squared_error(targets, predictions):
+            return np.sqrt(np.mean(np.power(targets - predictions, 2)))
 
         y_true = test_df * train_std + train_mean
         y_true = y_true.to_numpy()

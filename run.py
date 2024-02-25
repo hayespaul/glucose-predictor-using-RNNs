@@ -19,14 +19,13 @@ test_df = (test_df - train_mean) / train_std
 
 train_ds, valid_ds, test_ds = create_datasets(train_df=train_df, valid_df=valid_df, test_df=test_df, target_timestep=6, seq_length=12, batch_size=1024)
 
-models = Models(seq_length=12, train_ds=train_ds,valid_ds=valid_ds,test_ds=test_ds, epochs=400)
+final_models = Models(seq_length=12, train_ds=train_ds,valid_ds=valid_ds,test_ds=test_ds, epochs=100)
 
-# plots = Plots(models, learning_rate=0.001, sequence_length=12, target_timestep=6, train_df=train_df,valid_df=valid_df,test_df=test_df,epochs=1000)
-# plots.plot_sequence_size()
+final_plots = Plots(final_models, learning_rate=0.001, sequence_length=12, target_timestep=6, train_df=train_df,valid_df=valid_df,test_df=test_df,epochs=1000)
+final_plots.plot_sequence_size()
+final_plots.plot_units_size()
+final_plots.plot_learning_rate_size()
+final_plots.plot_batch_size()
 
-models.plot_performance()
-
-# lstm_model = models.lstm(lstm_units=32,rnn_units=32)
-# history = models.compile_and_fit_model(lstm_model)
-# models.plot_thirty_min_predictions(model=lstm_model,test_df=test_df,train_std=train_std,train_mean=train_mean)
-
+final_models.plot_performance()
+final_models.plot_thirty_min_predictions(final_models.lstm(16,16),test_df,train_std,train_mean)
