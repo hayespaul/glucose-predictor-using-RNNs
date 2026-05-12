@@ -9,8 +9,8 @@ from utils import compile_and_fit
 class Models:
     """Builds, trains, and evaluates RNN architectures for glucose forecasting.
 
-    All models predict a single glucose value `prediction_timestep` steps
-    (30 minutes by default) into the future from a fixed-length input window.
+    All models predict a single glucose value `target_timestep` steps into
+    the future from a fixed-length input window.
 
     Args:
         seq_length: Number of input timesteps per window.
@@ -18,10 +18,9 @@ class Models:
         valid_ds: Validation tf.data.Dataset.
         test_ds: Test tf.data.Dataset.
         epochs: Maximum training epochs (early stopping will typically fire first).
+        target_timestep: Number of 5-minute steps ahead to predict (default 6 → 30 min).
     """
 
-    # Number of 5-minute intervals to predict ahead (6 × 5 min = 30 min).
-    PREDICTION_TIMESTEP = 6
     LEARNING_RATE = 0.001
     PATIENCE = 200
 
@@ -32,12 +31,14 @@ class Models:
         valid_ds: tf.data.Dataset,
         test_ds: tf.data.Dataset,
         epochs: int,
+        target_timestep: int = 6,
     ) -> None:
         self.seq_length = seq_length
         self.train_ds = train_ds
         self.valid_ds = valid_ds
         self.test_ds = test_ds
         self.epochs = epochs
+        self.target_timestep = target_timestep
         self.multi_val_performance: dict = {}
         self.multi_performance: dict = {}
 
@@ -138,18 +139,17 @@ class Models:
             train_std: Training set standard deviation (used to denormalise).
             train_mean: Training set mean (used to denormalise).
         """
-        n_predictions = len(test_df) - self.seq_length
-        y_pred = np.zeros(n_predictions)
-
-        for i in range(n_predictions):
-            window = test_df.to_numpy()[np.newaxis, i : self.seq_length + i]
-            y_pred[i] = model.predict(window, verbose=0)[0]
+        test_array = test_df.to_numpy()
+        n_predictions = len(test_array) - self.seq_length
+        # Build all sliding windows at once and predict in a single batched call.
+        windows = np.stack([test_array[i : i + self.seq_length] for i in range(n_predictions)])
+        y_pred = model.predict(windows, verbose=0).flatten()
 
         y_true = (test_df * train_std + train_mean).to_numpy()
         y_pred = y_pred * train_std + train_mean
 
         time_true = np.arange(len(y_true)) * 5
-        pred_start = self.seq_length + self.PREDICTION_TIMESTEP - 1
+        pred_start = self.seq_length + self.target_timestep - 1
         time_pred = np.arange(pred_start, pred_start + n_predictions) * 5
 
         plt.plot(time_true, y_true, label="Ground truth", linestyle="--", marker="o", markersize=3)

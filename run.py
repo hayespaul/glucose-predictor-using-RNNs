@@ -43,6 +43,7 @@ def main() -> None:
         valid_ds=valid_ds,
         test_ds=test_ds,
         epochs=1000,
+        target_timestep=TARGET_TIMESTEP,
     )
     plots = Plots(
         models=sweep_models,
@@ -66,6 +67,7 @@ def main() -> None:
         valid_ds=valid_ds,
         test_ds=test_ds,
         epochs=MAX_EPOCHS,
+        target_timestep=TARGET_TIMESTEP,
     )
     final_models.plot_performance()
 
